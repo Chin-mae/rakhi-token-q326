@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { resolve } from "node:path";
+import { createInterface } from "node:readline/promises";
 import {
   address,
   createKeyPairSignerFromBytes,
@@ -77,4 +78,24 @@ export async function loadKitSigner() {
 
 export function formatWholeTokens(amount: bigint): string {
   return amount.toLocaleString("en-US");
+}
+
+export async function requireTypedConfirmation(
+  confirmationPhrase: string,
+): Promise<void> {
+  const prompt = createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  try {
+    const answer = await prompt.question(
+      `Type "${confirmationPhrase}" to sign and broadcast: `,
+    );
+    if (answer.trim() !== confirmationPhrase) {
+      throw new Error("Confirmation did not match. Transaction cancelled.");
+    }
+  } finally {
+    prompt.close();
+  }
 }

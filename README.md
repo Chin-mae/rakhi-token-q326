@@ -85,6 +85,7 @@ src/spl/
 - Every state-changing script defaults to **plan-only mode**.
 - A transaction is built and sent only when `--send` is supplied explicitly.
 - Every transaction is simulated before submission.
+- Simulation happens before signing, and broadcasting requires a typed confirmation phrase.
 - All addresses are validated; no cohort member's mint or recipient is hardcoded.
 - The wallet keypair is loaded from `SOLANA_KEYPAIR_PATH`, or from the Solana CLI's default `~/.config/solana/id.json` path.
 - `devnet-wallet.json`, `*-wallet.json`, `.env*`, and build output are excluded from Git.

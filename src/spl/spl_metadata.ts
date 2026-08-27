@@ -22,6 +22,7 @@ import {
   getRequiredAddressArgument,
   hasSendApproval,
   loadKeypairBytes,
+  requireTypedConfirmation,
 } from "./utils";
 
 async function main() {
@@ -79,10 +80,10 @@ async function main() {
     ...accounts,
     ...args,
   }).setBlockhash(latestBlockhash);
-  const signedTransaction = await transactionBuilder.buildAndSign(umi);
-  const simulation = await umi.rpc.simulateTransaction(signedTransaction, {
+  const unsignedTransaction = transactionBuilder.build(umi);
+  const simulation = await umi.rpc.simulateTransaction(unsignedTransaction, {
     commitment: "confirmed",
-    verifySignatures: true,
+    verifySignatures: false,
   });
 
   if (simulation.err) {
@@ -91,6 +92,9 @@ async function main() {
   console.log(
     `Simulation succeeded. Compute units: ${simulation.unitsConsumed ?? "not reported"}`,
   );
+
+  await requireTypedConfirmation("CREATE RAKHI METADATA");
+  const signedTransaction = await transactionBuilder.buildAndSign(umi);
 
   const signature = await umi.rpc.sendTransaction(signedTransaction, {
     preflightCommitment: "confirmed",

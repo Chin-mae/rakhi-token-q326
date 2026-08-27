@@ -1,6 +1,7 @@
 import {
   appendTransactionMessageInstructions,
   assertIsTransactionWithBlockhashLifetime,
+  compileTransaction,
   createSolanaRpc,
   createSolanaRpcSubscriptions,
   createTransactionMessage,
@@ -37,6 +38,7 @@ import {
   getRequiredAddressArgument,
   hasSendApproval,
   loadKitSigner,
+  requireTypedConfirmation,
 } from "./utils";
 
 const rpc = createSolanaRpc(RPC_URL);
@@ -106,15 +108,12 @@ async function main() {
     ],
     messageWithLifetime,
   );
-  const signedTransaction =
-    await signTransactionMessageWithSigners(transactionMessage);
-  assertIsTransactionWithBlockhashLifetime(signedTransaction);
-
+  const unsignedTransaction = compileTransaction(transactionMessage);
   const simulation = await rpc
-    .simulateTransaction(getBase64EncodedWireTransaction(signedTransaction), {
+    .simulateTransaction(getBase64EncodedWireTransaction(unsignedTransaction), {
       commitment: "confirmed",
       encoding: "base64",
-      sigVerify: true,
+      sigVerify: false,
     })
     .send();
 
@@ -124,6 +123,11 @@ async function main() {
   console.log(
     `Simulation succeeded. Compute units: ${simulation.value.unitsConsumed ?? "not reported"}`,
   );
+
+  await requireTypedConfirmation("MINT 4171512569 RAKHI");
+  const signedTransaction =
+    await signTransactionMessageWithSigners(transactionMessage);
+  assertIsTransactionWithBlockhashLifetime(signedTransaction);
 
   const sendAndConfirm = sendAndConfirmTransactionFactory({
     rpc,
