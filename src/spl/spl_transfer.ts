@@ -1,89 +1,132 @@
 import {
-  address,
   appendTransactionMessageInstructions,
   assertIsTransactionWithBlockhashLifetime,
-  createKeyPairSignerFromBytes,
   createSolanaRpc,
   createSolanaRpcSubscriptions,
   createTransactionMessage,
+  getBase64EncodedWireTransaction,
   getSignatureFromTransaction,
   sendAndConfirmTransactionFactory,
   setTransactionMessageFeePayerSigner,
   setTransactionMessageLifetimeUsingBlockhash,
   signTransactionMessageWithSigners,
 } from "@solana/kit";
-import wallet from "../../devnet-wallet.json";
 import {
   findAssociatedTokenPda,
-  getCreateAssociatedTokenInstructionAsync,
+  getCreateAssociatedTokenIdempotentInstructionAsync,
   getTransferCheckedInstruction,
   TOKEN_PROGRAM_ADDRESS,
 } from "@solana-program/token";
+import {
+  BASE_UNITS_PER_TOKEN,
+  CLUSTER,
+  RPC_SUBSCRIPTIONS_URL,
+  RPC_URL,
+  TOKEN_DECIMALS,
+  TOKEN_SYMBOL,
+} from "./config";
+import {
+  formatWholeTokens,
+  getRequiredAddressArgument,
+  getRequiredWholeTokenAmount,
+  hasSendApproval,
+  loadKitSigner,
+} from "./utils";
 
-const rpc = createSolanaRpc("https://api.devnet.solana.com");
+const rpc = createSolanaRpc(RPC_URL);
+const rpcSubscriptions = createSolanaRpcSubscriptions(RPC_SUBSCRIPTIONS_URL);
 
-const rpcSubscriptions = createSolanaRpcSubscriptions(
-  "wss://api.devnet.solana.com",
-);
+async function main() {
+  const mint = getRequiredAddressArgument("mint", 0);
+  const recipient = getRequiredAddressArgument("recipient", 1);
+  const wholeTokenAmount = getRequiredWholeTokenAmount(2);
 
-//paste your mint address got from spl_init.ts
-const mint = address("E2Jazz2VXcVL9RZkn6ZFA4q1YGvgEvrns3Gr6w72DC4w");
-
-//paste the address of the recipient
-const to = address("9EUd4VNcjMAysd7zQk3Q1a4tb28BYndLNBAQDiYnHJ64");
-
-(async () => {
-  try {
-    const signer = await createKeyPairSignerFromBytes(new Uint8Array(wallet));
-    const sendAndConfirm = sendAndConfirmTransactionFactory({
-      rpc,
-      rpcSubscriptions,
-    });
-
-    const [fromAta] = await findAssociatedTokenPda({
-      mint,
-      owner: signer.address,
-      tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    });
-    console.log(`Your fromAta is : ${fromAta}`);
-
-    const [toAta] = await findAssociatedTokenPda({
-      mint,
-      owner: to,
-      tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    });
-    console.log(`Your toAta is : ${toAta}`);
-
-    // const createAtaIx =
-
-    // const transferTx =
-
-    const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
-
-    const msg = createTransactionMessage({ version: 0 });
-
-    const msgWithPayer = setTransactionMessageFeePayerSigner(signer, msg);
-
-    const msgWithLiftime = setTransactionMessageLifetimeUsingBlockhash(
-      latestBlockhash,
-      msgWithPayer,
-    );
-
-    // const txMessage = appendTransactionMessageInstructions(
-    //   [createAtaIx, transferTx],
-    //   msgWithLiftime,
-    // );
-
-    // const signedTx = await signTransactionMessageWithSigners(txMessage);
-
-    // assertIsTransactionWithBlockhashLifetime(signedTx);
-
-    // const signature = getSignatureFromTransaction(signedTx);
-
-    // await sendAndConfirm(signedTx, { commitment: "confirmed" });
-
-    // console.log(`mint txid: ${signature}`);
-  } catch (error) {
-    console.log(error);
+  if (!hasSendApproval()) {
+    console.log("PLAN ONLY — no transaction was created, signed, or sent.");
+    console.log(`Mint: ${mint}`);
+    console.log(`Recipient: ${recipient}`);
+    console.log(`Amount: ${formatWholeTokens(wholeTokenAmount)} ${TOKEN_SYMBOL}`);
+    console.log("Run again with --send only after reviewing the transaction summary.");
+    return;
   }
-})();
+
+  const signer = await loadKitSigner();
+  const [sourceAta] = await findAssociatedTokenPda({
+    mint,
+    owner: signer.address,
+    tokenProgram: TOKEN_PROGRAM_ADDRESS,
+  });
+  const [destinationAta] = await findAssociatedTokenPda({
+    mint,
+    owner: recipient,
+    tokenProgram: TOKEN_PROGRAM_ADDRESS,
+  });
+  const createDestinationAtaInstruction =
+    await getCreateAssociatedTokenIdempotentInstructionAsync({
+      payer: signer,
+      mint,
+      owner: recipient,
+      ata: destinationAta,
+    });
+  const transferInstruction = getTransferCheckedInstruction({
+    amount: wholeTokenAmount * BASE_UNITS_PER_TOKEN,
+    mint,
+    decimals: TOKEN_DECIMALS,
+    authority: signer,
+    source: sourceAta,
+    destination: destinationAta,
+  });
+
+  console.log("Transaction summary");
+  console.log(`Cluster: ${CLUSTER}`);
+  console.log(`Fee payer and source owner: ${signer.address}`);
+  console.log(`Recipient: ${recipient}`);
+  console.log(`Destination ATA: ${destinationAta}`);
+  console.log(`Amount: ${formatWholeTokens(wholeTokenAmount)} ${TOKEN_SYMBOL}`);
+
+  const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
+  const message = createTransactionMessage({ version: 0 });
+  const messageWithPayer = setTransactionMessageFeePayerSigner(signer, message);
+  const messageWithLifetime = setTransactionMessageLifetimeUsingBlockhash(
+    latestBlockhash,
+    messageWithPayer,
+  );
+  const transactionMessage = appendTransactionMessageInstructions(
+    [createDestinationAtaInstruction, transferInstruction],
+    messageWithLifetime,
+  );
+  const signedTransaction =
+    await signTransactionMessageWithSigners(transactionMessage);
+  assertIsTransactionWithBlockhashLifetime(signedTransaction);
+
+  const simulation = await rpc
+    .simulateTransaction(getBase64EncodedWireTransaction(signedTransaction), {
+      commitment: "confirmed",
+      encoding: "base64",
+      sigVerify: true,
+    })
+    .send();
+  if (simulation.value.err) {
+    throw new Error(`Simulation failed: ${JSON.stringify(simulation.value.err)}`);
+  }
+  console.log(
+    `Simulation succeeded. Compute units: ${simulation.value.unitsConsumed ?? "not reported"}`,
+  );
+
+  const sendAndConfirm = sendAndConfirmTransactionFactory({
+    rpc,
+    rpcSubscriptions,
+  });
+  await sendAndConfirm(signedTransaction, { commitment: "confirmed" });
+
+  const signature = getSignatureFromTransaction(signedTransaction);
+  console.log(`Transfer transaction signature: ${signature}`);
+  console.log(
+    `Explorer: https://explorer.solana.com/tx/${signature}?cluster=${CLUSTER}`,
+  );
+}
+
+main().catch((error: unknown) => {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exitCode = 1;
+});

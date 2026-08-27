@@ -1,0 +1,30 @@
+{
+  "name": "Rakhi",
+  "symbol": "RAKHI",
+  "description": "A symbolic SPL token celebrating Raksha Bandhan 2026. Its fixed supply mirrors the United Nations World Population Prospects 2024 medium projection of the worldwide male population in 2026.",
+  "image": "https://raw.githubusercontent.com/Chin-mae/rakhi-token-q326/main/assets/rakhi-token.png",
+  "external_url": "https://github.com/Chin-mae/rakhi-token-q326",
+  "attributes": [
+    {
+      "trait_type": "Festival",
+      "value": "Raksha Bandhan 2026"
+    },
+    {
+      "trait_type": "Network",
+      "value": "Solana Devnet"
+    },
+    {
+      "trait_type": "Supply inspiration",
+      "value": "UN World Population Prospects 2024 medium projection for 2026"
+    }
+  ],
+  "properties": {
+    "files": [
+      {
+        "uri": "https://raw.githubusercontent.com/Chin-mae/rakhi-token-q326/main/assets/rakhi-token.png",
+        "type": "image/png"
+      }
+    ],
+    "category": "image"
+  }
+}
