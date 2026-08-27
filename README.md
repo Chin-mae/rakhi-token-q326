@@ -186,19 +186,26 @@ Adding `--send` submits that reviewed transfer. Removing mint authority does not
 
 ## Devnet deployment evidence
 
-This table will be filled only after each transaction is confirmed and independently verified.
+Deployment completed and independently verified on **28 August 2026**.
 
 | Item | Value |
 |---|---|
-| Creator wallet | Pending deployment |
-| Mint address | Pending deployment |
-| Creator ATA | Pending deployment |
-| Mint initialization transaction | Pending deployment |
-| Metadata transaction | Pending deployment |
-| Fixed-supply mint transaction | Pending deployment |
-| Verified supply | Pending deployment |
-| Mint authority | Pending verification |
-| Freeze authority | Pending verification |
+| Creator wallet | [`GzxbTnf...GNUHapJ`](https://explorer.solana.com/address/GzxbTnfFevizoZChrcG5RtKBZw3THEEXBgcbiGNUHapJ?cluster=devnet) |
+| Mint address | [`GzCRW7HH...AbjuSbMB`](https://explorer.solana.com/address/GzCRW7HH51eYrZRNVitjidUUg81Tie7kC9P5AbjuSbMB?cluster=devnet) |
+| Creator ATA | [`GSaUGZ4X...MWXTDcXi`](https://explorer.solana.com/address/GSaUGZ4X5a5wuv8YiQc2VTVdUr7dquTL6mTYMWXTDcXi?cluster=devnet) |
+| Mint initialization transaction | [`4LLUVyUy...dLpPj8zE`](https://explorer.solana.com/tx/4LLUVyUyMvxAT3MkiiSgkgrJwMf8gU3dUBk6dEXJvVV3GhLnkpH96xwbzxYAeNavXkNL5camFSRhMeYbdLpPj8zE?cluster=devnet) |
+| Metadata transaction | [`2u68L9SQ...MYa54DKp`](https://explorer.solana.com/tx/2u68L9SQyW1EvjVCG4RtB6YeTcQoSNHhacUT1d8V5reYcVnFfkPqdKAi4x6y3nibWxB71oTc6HYXZ2UFMYa54DKp?cluster=devnet) |
+| Fixed-supply mint transaction | [`3uektXNM...HM1UgoX1`](https://explorer.solana.com/tx/3uektXNM1sEZ27SgR92brsdqa4CaJkqL4szKQSw61WpzLxPTqyMMBKsRq3BM7bo567qq57Cjr3TmL2cWHM1UgoX1?cluster=devnet) |
+| Verified supply | `4,171,512,569 RAKHI` (`4,171,512,569,000,000` base units) |
+| Creator ATA balance at verification | `4,171,512,569 RAKHI` |
+| Mint authority | None — permanently revoked |
+| Freeze authority | None |
+
+Re-run the read-only verification at any time:
+
+```bash
+npm run spl:verify -- GzCRW7HH51eYrZRNVitjidUUg81Tie7kC9P5AbjuSbMB GzxbTnfFevizoZChrcG5RtKBZw3THEEXBgcbiGNUHapJ
+```
 
 ## Security implications
 

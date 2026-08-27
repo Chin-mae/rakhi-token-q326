@@ -113,8 +113,14 @@ async function main() {
   );
 
   await requireTypedConfirmation("SEND RAKHI TRANSFER");
+  const { value: freshBlockhash } = await rpc.getLatestBlockhash().send();
+  const transactionMessageWithFreshLifetime =
+    setTransactionMessageLifetimeUsingBlockhash(
+      freshBlockhash,
+      transactionMessage,
+    );
   const signedTransaction =
-    await signTransactionMessageWithSigners(transactionMessage);
+    await signTransactionMessageWithSigners(transactionMessageWithFreshLifetime);
   assertIsTransactionWithBlockhashLifetime(signedTransaction);
 
   const sendAndConfirm = sendAndConfirmTransactionFactory({

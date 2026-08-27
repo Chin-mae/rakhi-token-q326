@@ -84,6 +84,7 @@ async function main() {
   const simulation = await umi.rpc.simulateTransaction(unsignedTransaction, {
     commitment: "confirmed",
     verifySignatures: false,
+    replaceRecentBlockhash: true,
   });
 
   if (simulation.err) {
@@ -94,7 +95,13 @@ async function main() {
   );
 
   await requireTypedConfirmation("CREATE RAKHI METADATA");
-  const signedTransaction = await transactionBuilder.buildAndSign(umi);
+  const freshBlockhash = await umi.rpc.getLatestBlockhash({
+    commitment: "confirmed",
+  });
+  const transactionBuilderWithFreshBlockhash =
+    transactionBuilder.setBlockhash(freshBlockhash);
+  const signedTransaction =
+    await transactionBuilderWithFreshBlockhash.buildAndSign(umi);
 
   const signature = await umi.rpc.sendTransaction(signedTransaction, {
     preflightCommitment: "confirmed",
@@ -102,7 +109,7 @@ async function main() {
   });
   const confirmation = await umi.rpc.confirmTransaction(signature, {
     commitment: "confirmed",
-    strategy: { type: "blockhash", ...latestBlockhash },
+    strategy: { type: "blockhash", ...freshBlockhash },
   });
 
   if (confirmation.value.err) {
