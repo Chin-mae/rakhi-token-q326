@@ -9,7 +9,10 @@
     "spl:metadata": "ts-node src/spl/spl_metadata.ts",
     "spl:mint": "ts-node src/spl/spl_mint.ts",
     "spl:transfer": "ts-node src/spl/spl_transfer.ts",
-    "spl:verify": "ts-node src/spl/spl_verify.ts"
+    "spl:verify": "ts-node src/spl/spl_verify.ts",
+    "nft:image": "ts-node src/nft/nft_image.ts",
+    "nft:metadata": "ts-node src/nft/nft_metadata.ts",
+    "nft:update": "ts-node src/nft/nft_update.ts"
   },
   "keywords": [],
   "author": "Chin-mae",

@@ -2,16 +2,16 @@ import {
   createSignerFromKeypair,
   signerIdentity,
 } from "@metaplex-foundation/umi";
-import wallet from "../../devnet-wallet.json";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { irysUploader } from "@metaplex-foundation/umi-uploader-irys";
+import {
+  loadKeypairBytes,
+  requireTypedConfirmation,
+} from "../spl/utils";
 
 const umi = createUmi(
   process.env.SOLANA_RPC_URL ?? "https://api.devnet.solana.com",
 );
-
-const keypair = umi.eddsa.createKeypairFromSecretKey(new Uint8Array(wallet));
-const signer = createSignerFromKeypair(umi, keypair);
 
 umi.use(
   irysUploader({
@@ -19,20 +19,39 @@ umi.use(
   }),
 );
 
-umi.use(signerIdentity(signer));
-
 (async () => {
   try {
-    //change the image uri to your image uri obtained from nft_image.ts
     const image =
-      "https://gateway.irys.xyz/5EDyiNrMWfhjdsEwXLrwkHPwZoZB2m1A2Kudrfxo1tpr";
+      "https://gateway.irys.xyz/9cZpvaBwooUErUMVjKVqQxrgAAHJVhLTJTZ3jf1XCwep";
 
-    //json scheme : https://www.metaplex.com/docs/smart-contracts/core/json-schema
-    //change the metadata
-    // const metadata =
-    // const myUri =
-    // console.log(`metadata uri: ${myUri} `);
+    const metadata = {
+      name: "Solana spawnpoint",
+      image,
+      description: "Turbin3 Cohort Admit NFT",
+      category: "image",
+      symbol: "T3CA",
+    };
+
+    console.log("Metadata preview:");
+    console.log(JSON.stringify(metadata, null, 2));
+
+    if (!process.argv.includes("--upload")) {
+      console.log("\nPreview only. Run `npm run nft:metadata -- --upload` to upload it.");
+      return;
+    }
+
+    const keypair = umi.eddsa.createKeypairFromSecretKey(
+      await loadKeypairBytes(),
+    );
+    const signer = createSignerFromKeypair(umi, keypair);
+    umi.use(signerIdentity(signer));
+
+    await requireTypedConfirmation("UPLOAD NFT METADATA");
+    const myUri = await umi.uploader.uploadJson(metadata);
+    console.log(`Metadata URI: ${myUri}`);
+    console.log(`Next: npm run nft:update -- ${myUri}`);
   } catch (error) {
-    console.log("error", error);
+    console.error("Metadata upload failed:", error);
+    process.exitCode = 1;
   }
 })();
