@@ -1,0 +1,19 @@
+$ npm run nft:verify -- transfer
+
+METAPLEX CORE NFT — LIVE DEVNET VERIFICATION
+=============================================
+Asset:             BAoQMWun1TB1s2K6doBdUmeKiTsQfhR9AabfVxUFshx4
+Current name:      Solana spawnpoint
+Metadata URI:      https://gateway.irys.xyz/ApgZVZ1AQj7HndT2TENsdVjHadeDtiPcYFaLn2tP3JHo
+Current owner:     DFA7MYRrMRody7RdSN8RtgyiYL96nLMuh41Eyp3KuXu5
+Update authority:  GzxbTnfFevizoZChrcG5RtKBZw3THEEXBgcbiGNUHapJ
+
+NFT OWNERSHIP TRANSFER
+Signature:          KWraJtdrzV5UbvHYaUzFT1rBm3sWRDHkLkZ7UNW6hZDukBAtLmwHpvQHKvWQu4ZND9iDjxgKneocwUq4WU7tJWM
+Status:             finalized
+Transaction error:  none
+Verified owner:     DFA7MYRrMRody7RdSN8RtgyiYL96nLMuh41Eyp3KuXu5
+Update authority:   GzxbTnfFevizoZChrcG5RtKBZw3THEEXBgcbiGNUHapJ
+Result:             TRANSFER VERIFIED
+
+Generated from a fresh read-only devnet check on 2026-09-01.

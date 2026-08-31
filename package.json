@@ -13,7 +13,8 @@
     "nft:image": "ts-node src/nft/nft_image.ts",
     "nft:metadata": "ts-node src/nft/nft_metadata.ts",
     "nft:update": "ts-node src/nft/nft_update.ts",
-    "nft:transfer": "ts-node src/nft/nft_transfer.ts"
+    "nft:transfer": "ts-node src/nft/nft_transfer.ts",
+    "nft:verify": "ts-node src/nft/nft_verify.ts"
   },
   "keywords": [],
   "author": "Chin-mae",

@@ -1,0 +1,17 @@
+$ npm run spl:transfer -- GzCRW7HH51eYrZRNVitjidUUg81Tie7kC9P5AbjuSbMB DFA7MYRrMRody7RdSN8RtgyiYL96nLMuh41Eyp3KuXu5 1 --send
+
+RAKHI SPL TOKEN TRANSFER — DEVNET EXECUTION
+============================================
+Source owner:       GzxbTnfFevizoZChrcG5RtKBZw3THEEXBgcbiGNUHapJ
+Source ATA:         GSaUGZ4X5a5wuv8YiQc2VTVdUr7dquTL6mTYMWXTDcXi
+Recipient:          DFA7MYRrMRody7RdSN8RtgyiYL96nLMuh41Eyp3KuXu5
+Destination ATA:    FLjhqLJKbFtBm56ux8ExKA2yJsgLw9tLUgSrMfAGezhW
+Amount:             1 RAKHI (1,000,000 base units)
+Simulation:         succeeded (16,623 compute units)
+Signature:          3eta968NvZGruJS3Vpmzsc6sSsXpmwTMxzb13KUd3Vsjb5WuUv47d55BUwW47NEEJ81jibdNjfrTC7gLZ68kUnKJ
+Status:             finalized (slot 491066022)
+Source after:       4,171,512,568 RAKHI
+Destination after:  1 RAKHI
+Result:             TRANSFER VERIFIED
+
+Generated from verified CLI output on 2026-09-01.

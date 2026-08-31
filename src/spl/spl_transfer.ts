@@ -13,6 +13,8 @@ import {
   signTransactionMessageWithSigners,
 } from "@solana/kit";
 import {
+  fetchMaybeToken,
+  fetchToken,
   findAssociatedTokenPda,
   getCreateAssociatedTokenIdempotentInstructionAsync,
   getTransferCheckedInstruction,
@@ -42,16 +44,6 @@ async function main() {
   const mint = getRequiredAddressArgument("mint", 0);
   const recipient = getRequiredAddressArgument("recipient", 1);
   const wholeTokenAmount = getRequiredWholeTokenAmount(2);
-
-  if (!hasSendApproval()) {
-    console.log("PLAN ONLY — no transaction was created, signed, or sent.");
-    console.log(`Mint: ${mint}`);
-    console.log(`Recipient: ${recipient}`);
-    console.log(`Amount: ${formatWholeTokens(wholeTokenAmount)} ${TOKEN_SYMBOL}`);
-    console.log("Run again with --send only after reviewing the transaction summary.");
-    return;
-  }
-
   const signer = await loadKitSigner();
   const [sourceAta] = await findAssociatedTokenPda({
     mint,
@@ -70,8 +62,36 @@ async function main() {
       owner: recipient,
       ata: destinationAta,
     });
+  const transferBaseUnits = wholeTokenAmount * BASE_UNITS_PER_TOKEN;
+  const sourceBefore = await fetchToken(rpc, sourceAta, {
+    commitment: "confirmed",
+  });
+  const destinationBefore = await fetchMaybeToken(rpc, destinationAta, {
+    commitment: "confirmed",
+  });
+  const destinationBalanceBefore = destinationBefore.exists
+    ? destinationBefore.data.amount
+    : 0n;
+
+  if (
+    sourceBefore.data.mint !== mint ||
+    sourceBefore.data.owner !== signer.address
+  ) {
+    throw new Error("The source ATA does not match the expected mint and owner.");
+  }
+  if (
+    destinationBefore.exists &&
+    (destinationBefore.data.mint !== mint ||
+      destinationBefore.data.owner !== recipient)
+  ) {
+    throw new Error("The destination ATA does not match the expected mint and owner.");
+  }
+  if (sourceBefore.data.amount < transferBaseUnits) {
+    throw new Error("The source ATA does not have enough RAKHI for this transfer.");
+  }
+
   const transferInstruction = getTransferCheckedInstruction({
-    amount: wholeTokenAmount * BASE_UNITS_PER_TOKEN,
+    amount: transferBaseUnits,
     mint,
     decimals: TOKEN_DECIMALS,
     authority: signer,
@@ -82,9 +102,13 @@ async function main() {
   console.log("Transaction summary");
   console.log(`Cluster: ${CLUSTER}`);
   console.log(`Fee payer and source owner: ${signer.address}`);
+  console.log(`Source ATA: ${sourceAta}`);
   console.log(`Recipient: ${recipient}`);
   console.log(`Destination ATA: ${destinationAta}`);
   console.log(`Amount: ${formatWholeTokens(wholeTokenAmount)} ${TOKEN_SYMBOL}`);
+  console.log(`Base units: ${transferBaseUnits}`);
+  console.log(`Source balance before: ${sourceBefore.data.amount}`);
+  console.log(`Destination balance before: ${destinationBalanceBefore}`);
 
   const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
   const message = createTransactionMessage({ version: 0 });
@@ -112,6 +136,12 @@ async function main() {
     `Simulation succeeded. Compute units: ${simulation.value.unitsConsumed ?? "not reported"}`,
   );
 
+  if (!hasSendApproval()) {
+    console.log("SIMULATION ONLY — no transaction was signed or sent.");
+    console.log("Review the summary, then rerun with --send to broadcast.");
+    return;
+  }
+
   await requireTypedConfirmation("SEND RAKHI TRANSFER");
   const { value: freshBlockhash } = await rpc.getLatestBlockhash().send();
   const transactionMessageWithFreshLifetime =
@@ -134,6 +164,42 @@ async function main() {
   console.log(
     `Explorer: https://explorer.solana.com/tx/${signature}?cluster=${CLUSTER}`,
   );
+
+  let sourceAfter = await fetchToken(rpc, sourceAta, {
+    commitment: "confirmed",
+  });
+  let destinationAfter = await fetchToken(rpc, destinationAta, {
+    commitment: "confirmed",
+  });
+  const expectedSourceBalance = sourceBefore.data.amount - transferBaseUnits;
+  const expectedDestinationBalance =
+    destinationBalanceBefore + transferBaseUnits;
+
+  for (
+    let attempt = 1;
+    attempt < 6 &&
+    (sourceAfter.data.amount !== expectedSourceBalance ||
+      destinationAfter.data.amount !== expectedDestinationBalance);
+    attempt += 1
+  ) {
+    await new Promise((resolve) => setTimeout(resolve, 1_500));
+    sourceAfter = await fetchToken(rpc, sourceAta, {
+      commitment: "confirmed",
+    });
+    destinationAfter = await fetchToken(rpc, destinationAta, {
+      commitment: "confirmed",
+    });
+  }
+
+  if (
+    sourceAfter.data.amount !== expectedSourceBalance ||
+    destinationAfter.data.amount !== expectedDestinationBalance
+  ) {
+    throw new Error("Transaction confirmed, but balance verification failed.");
+  }
+
+  console.log(`Verified source balance: ${sourceAfter.data.amount}`);
+  console.log(`Verified destination balance: ${destinationAfter.data.amount}`);
 }
 
 main().catch((error: unknown) => {

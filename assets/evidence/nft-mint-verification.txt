@@ -1,0 +1,10 @@
+chinmay@Chinmays-MacBook-Air spl-nft-q326 % npm run nft:image
+
+> rakhi-token-q326@1.0.0 nft:image
+> ts-node src/nft/nft_image.ts
+
+Your image URI:  https://gateway.irys.xyz/9cZpvaBwooUErUMVjKVqQxrgAAHJVhLTJTZ3jf1XCwep
+chinmay@Chinmays-MacBook-Air spl-nft-q326 % npx ts-node src/nft/nft_metadata.ts
+metadata uri: https://gateway.irys.xyz/8JUVH1n2xyhZbx1ofFZM7SmzkNAtxiJUNae3KW9w8WSX 
+chinmay@Chinmays-MacBook-Air spl-nft-q326 % npx ts-node src/nft/nft_mint.ts    
+signature efzp6SvAXcD6qw3STWQpTZxYJRRBzUwkv1ExyyWgKhmpV33aNFEwrZQwMCcN2MRyBrzUx51xRTwU3NVCTZxdg7d , asset : BAoQMWun1TB1s2K6doBdUmeKiTsQfhR9AabfVxUFshx4
