@@ -226,6 +226,8 @@ This keeps the on-chain account small while preserving verifiable ownership and 
 
 All three on-chain stages in this diagram—creation, update, and transfer—were executed and finalized on devnet.
 
+[Watch the explainer video for this NFT lifecycle diagram](https://drive.google.com/drive/folders/1p7J_XXeqwL0Sj0iw25jymp303y6s7xUu?usp=sharing)
+
 ```mermaid
 sequenceDiagram
     autonumber
